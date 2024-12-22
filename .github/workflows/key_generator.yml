@@ -15,12 +15,25 @@ jobs:
       - name: Generate Key
         run: |
           # Generate a random 16-digit key
-          echo $((1000000000000000 + RANDOM % 9000000000000000)) > key.txt
+          GENERATED_KEY=$((1000000000000000 + RANDOM % 9000000000000000))
+          echo $GENERATED_KEY > key.txt
+          echo "Generated Key: $GENERATED_KEY"  # Debugging output
 
-      - name: Commit and Push Key
+      - name: Set up Git for Authentication
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://github.com/${{ github.repository }}.git
+          git fetch
+
+      - name: Commit and Push Key
+        run: |
           git add key.txt
           git commit -m "Update key"
-          git push
+          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Check Repository Status
+        run: |
+          # Debugging: Check the status of the repository
+          git status
+          git log --oneline -n 5  # View the last 5 commits
